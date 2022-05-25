@@ -1,5 +1,10 @@
 <script setup>
 import { ref } from "vue";
+import Title from "./components/Title.vue";
+import TodoItem from "./components/TodoItem.vue";
+import AddTodo from "./components/AddTodo.vue";
+import Modal from "./components/Modal.vue";
+import Layout from "./components/Layout.vue";
 
 const todos = ref([
   {
@@ -20,9 +25,12 @@ const newTodo = ref("");
 const modal = ref(false);
 const toDelete = ref(-1);
 
-const addTodo = () => {
+const closeModal = () => {
+  modal.value = false;
+};
+const addTodo = (str) => {
   todos.value.push({
-    title: newTodo.value,
+    title: str,
     completed: false,
   });
   newTodo.value = "";
@@ -42,74 +50,35 @@ const completeTodo = (index) => {
 </script>
 
 <template>
-  <div class="w-full bg-base-300 min-h-screen flex items-center justify-center">
+  <Layout>
     <div
       class="w-full max-w-md bg-base-100 p-6 rounded-lg shadow-lg flex flex-col gap-4"
     >
-      <h1 class="text-primary text-xl font-black text-center">Todo APP</h1>
+      <!-- Title Component -->
+      <Title title="Todo APP" icon="calendar-check" />
       <div class="divider my-0"></div>
-      <div class="flex">
-        <input
-          type="text"
-          class="input input-bordered border-r-0 rounded-r-none flex-grow"
-          placeholder="Set new todo..."
-          v-model="newTodo"
-        />
-        <button
-          class="btn btn-primary rounded-l-none"
-          :disabled="newTodo.length < 3"
-          @click="addTodo"
-        >
-          ADD
-        </button>
-      </div>
+      <!-- Add Todo Form Component -->
+      <AddTodo :newTodo="newTodo" @add-todo="(str) => addTodo(str)" />
       <div class="divider my-0"></div>
       <ul v-if="todos.length">
-        <li
-          class="flex items-center justify-between bg-base-200 px-3 py-2 rounded-md mb-2"
+        <!-- Loop of Todo Items -->
+        <TodoItem
           v-for="(todo, index) in todos"
-        >
-          <span
-            class="text-lg font-semibold"
-            :class="{
-              'text-secondary': todo.completed,
-              italic: todo.completed,
-            }"
-          >
-            {{ todo.title }}
-          </span>
-          <div class="flex gap-3 items-center">
-            <input
-              type="checkbox"
-              class="toggle toggle-secondary"
-              :checked="todo.completed"
-              @change="completeTodo(index)"
-            />
-            <button
-              class="btn btn-sm btn-circle btn-error"
-              @click="deleteTodo(index)"
-            >
-              <i class="fas fa-trash"></i>
-            </button>
-          </div>
-        </li>
+          :key="index"
+          :todo="todo"
+          :index="index"
+          @complete="(id) => completeTodo(id)"
+          @delete="(id) => deleteTodo(id)"
+        />
       </ul>
       <p v-else>No todos yet...</p>
     </div>
-    <div
-      class="w-full fixed h-screen bg-black bg-opacity-70 z-50 flex items-center justify-center"
+    <!-- Modal -->
+    <Modal
       v-if="modal"
-    >
-      <div class="fixed z-10 w-full h-full" @click="modal = false"></div>
-      <div
-        class="bg-base-200 p-6 rounded-lg flex flex-col gap-4 text-center relative z-20"
-      >
-        <h3 class="text-xl">Are you sure you want to delete this?</h3>
-        <div class="flex justify-center gap-3">
-          <button class="btn btn-error" @click="removeTodo">Delete</button>
-          <button class="btn" @click="modal = false">Cancel</button>
-        </div>
-      </div>
-    </div>
-  </div>
+      :modal="modal"
+      @remove="removeTodo"
+      @close-modal="closeModal"
+    />
+  </Layout>
 </template>
